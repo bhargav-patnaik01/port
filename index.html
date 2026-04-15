@@ -6,7 +6,8 @@
     <meta charset="utf-8" />
     <meta content="width=device-width, initial-scale=1.0" name="viewport" />
     <title>Bhargav Patnaik | Architecting Chaos</title>
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' fill='%23ec5b13'/%3E%3Ctext x='50%25' y='54%25' dominant-baseline='middle' text-anchor='middle' font-family='Arial,sans-serif' font-weight='900' font-size='18' fill='white'%3EBP%3C/text%3E%3C/svg%3E" />
+    <link rel="icon" type="image/svg+xml"
+        href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' fill='%23ec5b13'/%3E%3Ctext x='50%25' y='54%25' dominant-baseline='middle' text-anchor='middle' font-family='Arial,sans-serif' font-weight='900' font-size='18' fill='white'%3EBP%3C/text%3E%3C/svg%3E" />
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <link
         href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@300;400;700;900&amp;family=Space+Grotesk:wght@300;400;500;600;700&amp;family=Instrument+Serif:ital@0;1&amp;display=swap"
@@ -186,6 +187,12 @@
             display: block;
             background: #f8f9fa;
         }
+
+        @media (max-width: 767px) {
+            #nextjs-portfolio-merge {
+                display: none;
+            }
+        }
     </style>
 </head>
 
@@ -294,7 +301,7 @@
         (() => {
             const section = document.getElementById('nextjs-portfolio-merge');
             const frame = document.getElementById('nextjs-portfolio-frame');
-            if (!section || !frame) return;
+            if (!section || !frame || window.innerWidth < 768) return;
 
             const syncPortfolioProgress = () => {
                 const rect = section.getBoundingClientRect();
@@ -570,7 +577,8 @@
                             Club</span>
                         <h3 class="text-3xl font-black uppercase tracking-tight text-slate-900">Keynote Speaker</h3>
                         <p class="text-lg text-slate-800 leading-relaxed">
-                            "Entrepreneurship is the relentless pursuit of solving chaos through kinetic design."
+                            "You cannot learn ENTREPRENEURSHIP, it's not a skill. You need to live it, it's a
+                            lifestyle."
                         </p>
                     </div>
                 </div>
@@ -584,7 +592,7 @@
                         <span class="text-xs font-bold tracking-widest uppercase text-primary">GDG VIT Chennai</span>
                         <h3 class="text-3xl font-black uppercase tracking-tight text-slate-900">Outreach Strategy</h3>
                         <p class="text-lg text-slate-800 leading-relaxed">Leading sponsor outreach and high-level
-                            partnership coordination for the Google Developer Group community ecosystem.</p>
+                            partnership coordination for the Google Developer Group community on campus.</p>
                     </div>
                 </div>
                 <!-- V-NEST Card -->
@@ -598,7 +606,7 @@
                     <div class="space-y-4">
                         <span class="text-xs font-bold tracking-widest uppercase text-primary">V-NEST Incubator</span>
                         <h3 class="text-3xl font-black uppercase tracking-tight text-slate-900">Founder Support</h3>
-                        <p class="text-lg text-slate-800 leading-relaxed">Architecting business models and validating
+                        <p class="text-lg text-slate-800 leading-relaxed">Validating
                             core concepts for pre-seed founders within the institutional incubator.</p>
                     </div>
                 </div>
@@ -658,7 +666,7 @@
         (function () {
             const host = document.getElementById('nextjs-portfolio-merge');
             const frame = document.getElementById('nextjs-portfolio-frame');
-            if (!host || !frame) return;
+            if (!host || !frame || window.innerWidth < 768) return;
 
             let frameReady = false;
             let ticking = false;
