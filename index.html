@@ -225,6 +225,13 @@
                 const loaderCount = document.getElementById('loader-count');
                 let dismissed = false;
 
+                if (window.innerWidth < 768) {
+                    if (loader) {
+                        loader.remove();
+                    }
+                    return;
+                }
+
                 window.addEventListener('message', (event) => {
                     const d = event.data;
                     if (!d || d.type !== 'portfolio-loading-progress') return;
