@@ -32,7 +32,7 @@ const timeline: TimelineItem[] = [
     period: "Jan 2025 - Present",
     bullets: [
       "Scaled ecosystem to 250+ founders and 2,000+ community members.",
-      "Secured ~$15M tech credits through partnership strategy.",
+      "Secured ~$2M tech credits through partnership strategy.",
       "Closed enterprise consulting deals beyond INR 15L per client.",
     ],
   },
@@ -594,7 +594,7 @@ export default function ScrollyPortfolio() {
                 progress={progress}
                 range={[0.48, 0.62]}
                 title="Ecosystem Strategy"
-                body="Scaled a 2,000+ member founder community with partnerships delivering ~$15M in technology credits."
+                body="Scaled a 2,000+ member founder community with partnerships delivering ~$2M in technology credits."
               />
 
               <motion.section
