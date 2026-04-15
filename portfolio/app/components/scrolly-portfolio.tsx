@@ -424,6 +424,7 @@ export default function ScrollyPortfolio() {
     frameUrls.forEach((url, index) => {
       const image = new Image();
       image.decoding = "async";
+      image.crossOrigin = "anonymous";
       image.src = url;
       image.onload = () => {
         if (!mounted) return;
@@ -437,9 +438,13 @@ export default function ScrollyPortfolio() {
           sample.height = 1;
           const sampleCtx = sample.getContext("2d");
           if (sampleCtx) {
-            sampleCtx.drawImage(image, 0, 0, 1, 1);
-            const [r, g, b] = sampleCtx.getImageData(0, 0, 1, 1).data;
-            setDayBg(toHex(r, g, b));
+            try {
+              sampleCtx.drawImage(image, 0, 0, 1, 1);
+              const [r, g, b] = sampleCtx.getImageData(0, 0, 1, 1).data;
+              setDayBg(toHex(r, g, b));
+            } catch {
+              // Keep default background when pixel sampling is blocked.
+            }
           }
 
           drawFrame(0);
@@ -451,9 +456,13 @@ export default function ScrollyPortfolio() {
           sample.height = 1;
           const sampleCtx = sample.getContext("2d");
           if (sampleCtx) {
-            sampleCtx.drawImage(image, 0, 0, 1, 1);
-            const [r, g, b] = sampleCtx.getImageData(0, 0, 1, 1).data;
-            setNightBg(toHex(r, g, b));
+            try {
+              sampleCtx.drawImage(image, 0, 0, 1, 1);
+              const [r, g, b] = sampleCtx.getImageData(0, 0, 1, 1).data;
+              setNightBg(toHex(r, g, b));
+            } catch {
+              // Keep default background when pixel sampling is blocked.
+            }
           }
         }
       };
