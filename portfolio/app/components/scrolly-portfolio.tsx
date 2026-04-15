@@ -346,22 +346,21 @@ export default function ScrollyPortfolio() {
   const [dayBg, setDayBg] = useState("#f8f9fa");
   const [nightBg, setNightBg] = useState("#0c0f10");
   const [loadedCount, setLoadedCount] = useState(0);
-  const [loadingDone, setLoadingDone] = useState(false);
   const theme: ThemeMode = frameIndex >= NIGHT_START_FRAME ? "night" : "day";
-
-  const allLoaded = loadedCount >= TOTAL_FRAMES;
-  const loadPercent = Math.round((loadedCount / TOTAL_FRAMES) * 100);
 
   const frameUrls = FRAME_URLS;
   const progress = useMotionValue(0);
 
-  // Mark loading done with a short delay for the exit animation
+  // Send loading progress to parent window so it can show a global loading screen
   useEffect(() => {
-    if (allLoaded && !loadingDone) {
-      const timer = setTimeout(() => setLoadingDone(true), 600);
-      return () => clearTimeout(timer);
-    }
-  }, [allLoaded, loadingDone]);
+    try {
+      window.parent.postMessage({
+        type: 'portfolio-loading-progress',
+        loaded: loadedCount,
+        total: TOTAL_FRAMES,
+      }, '*');
+    } catch { /* ignore if no parent */ }
+  }, [loadedCount]);
 
   const getNearestLoadedFrame = (index: number) => {
     if (loadedFramesRef.current[index]) return index;
@@ -559,90 +558,6 @@ export default function ScrollyPortfolio() {
 
   return (
     <div data-theme={theme} className="relative overflow-x-clip">
-      {/* ── Loading Screen ── */}
-      {!loadingDone && (
-        <div
-          style={{
-            position: "fixed",
-            inset: 0,
-            zIndex: 9999,
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            background: "#0c0f10",
-            transition: "opacity 0.5s ease-out, visibility 0.5s ease-out",
-            opacity: allLoaded ? 0 : 1,
-            visibility: allLoaded ? "hidden" : "visible",
-            pointerEvents: allLoaded ? "none" : "auto",
-          }}
-        >
-          <p
-            style={{
-              fontFamily: "'Space Grotesk', 'Public Sans', sans-serif",
-              fontSize: "0.7rem",
-              fontWeight: 700,
-              letterSpacing: "0.25em",
-              textTransform: "uppercase",
-              color: "rgba(255,255,255,0.4)",
-              marginBottom: "1.5rem",
-            }}
-          >
-            Loading Experience
-          </p>
-
-          {/* Percentage */}
-          <p
-            style={{
-              fontFamily: "'Space Grotesk', 'Public Sans', sans-serif",
-              fontSize: "4rem",
-              fontWeight: 900,
-              color: "#ec5b13",
-              lineHeight: 1,
-              letterSpacing: "-0.04em",
-              marginBottom: "1.5rem",
-            }}
-          >
-            {loadPercent}
-            <span style={{ fontSize: "1.5rem", opacity: 0.6 }}>%</span>
-          </p>
-
-          {/* Progress bar track */}
-          <div
-            style={{
-              width: "min(80vw, 320px)",
-              height: "3px",
-              background: "rgba(255,255,255,0.08)",
-              borderRadius: "2px",
-              overflow: "hidden",
-            }}
-          >
-            {/* Progress bar fill */}
-            <div
-              style={{
-                width: `${loadPercent}%`,
-                height: "100%",
-                background: "#ec5b13",
-                borderRadius: "2px",
-                transition: "width 0.15s ease-out",
-              }}
-            />
-          </div>
-
-          <p
-            style={{
-              fontFamily: "'Space Grotesk', 'Public Sans', sans-serif",
-              fontSize: "0.65rem",
-              color: "rgba(255,255,255,0.25)",
-              marginTop: "1rem",
-              letterSpacing: "0.1em",
-            }}
-          >
-            {loadedCount} / {TOTAL_FRAMES} frames
-          </p>
-        </div>
-      )}
-
       <section className="relative h-screen">
         <div className="h-screen">
           <canvas ref={canvasRef} className="absolute inset-0" aria-hidden />
