@@ -235,8 +235,16 @@
                     return;
                 }
 
-                // Prevent background scrolling while loading screen is active
+                // Prevent background scrolling while loading screen is active.
+                // The root element needs it too: locking body alone still leaves the
+                // document scrollbar visible at the right edge.
+                document.documentElement.style.overflow = 'hidden';
                 document.body.style.overflow = 'hidden';
+
+                function unlockScroll() {
+                    document.documentElement.style.overflow = '';
+                    document.body.style.overflow = '';
+                }
 
                 function dismissLoader() {
                     if (dismissed) return;
@@ -244,22 +252,34 @@
                     if (loaderPercent) loaderPercent.innerHTML = '100<span style="font-size:1.5rem;opacity:0.6">%</span>';
                     if (loaderBar) loaderBar.style.width = '100%';
                     if (loaderCount) loaderCount.textContent = '228 / 228 frames';
+                    clearTimeout(stallTimer);
+                    clearTimeout(hardCapTimer);
                     if (loader) {
                         loader.style.opacity = '0';
                         loader.style.pointerEvents = 'none';
                         setTimeout(() => {
                             loader.remove();
-                            document.body.style.overflow = '';
+                            unlockScroll();
                         }, 600);
                     } else {
-                        document.body.style.overflow = '';
+                        unlockScroll();
                     }
                 }
 
-                // Safety fallback: auto-dismiss loader after 2.5 seconds if frames load slowly or postMessage is delayed
-                const fallbackTimer = setTimeout(() => {
-                    dismissLoader();
-                }, 2500);
+                // Safety fallback. A flat 2.5s timer dismissed the loader while the
+                // counter still read 0%, so instead we wait for progress to actually
+                // stall, with a hard ceiling so a dead iframe can never trap anyone.
+                const STALL_MS = 8000;
+                const HARD_CAP_MS = 25000;
+                let stallTimer = null;
+
+                function armStallTimer() {
+                    clearTimeout(stallTimer);
+                    stallTimer = setTimeout(dismissLoader, STALL_MS);
+                }
+
+                const hardCapTimer = setTimeout(dismissLoader, HARD_CAP_MS);
+                armStallTimer();
 
                 window.addEventListener('message', (event) => {
                     const d = event.data;
@@ -272,9 +292,11 @@
                     if (loaderBar) loaderBar.style.width = pct + '%';
                     if (loaderCount) loaderCount.textContent = loaded + ' / ' + total + ' frames';
 
-                    if (loaded >= total && !dismissed) {
-                        clearTimeout(fallbackTimer);
+                    if (loaded >= total) {
                         dismissLoader();
+                    } else {
+                        // Progress is flowing, so push the stall deadline back.
+                        armStallTimer();
                     }
                 });
             })();
@@ -325,8 +347,11 @@
     </main>
     <section id="nextjs-portfolio-merge" aria-label="Scrolly portfolio section">
         <div class="nextjs-portfolio-sticky">
+            <!-- Must load eagerly: this section sits below the hero, so a lazy iframe
+                 would not begin preloading until scrolled toward, and the global
+                 loader would sit at 0% until its fallback timer fired. -->
             <iframe id="nextjs-portfolio-frame" title="Bhargav scrolly portfolio" src="./portfolio/out/index.html"
-                loading="lazy"></iframe>
+                loading="eager"></iframe>
         </div>
     </section>
     <script>
