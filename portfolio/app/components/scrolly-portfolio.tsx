@@ -345,7 +345,11 @@ export default function ScrollyPortfolio() {
   const [frameIndex, setFrameIndex] = useState(0);
   const [dayBg, setDayBg] = useState("#f8f9fa");
   const [nightBg, setNightBg] = useState("#0c0f10");
+  // Frames that actually decoded and can be drawn.
   const [loadedCount, setLoadedCount] = useState(0);
+  // Frames that finished either way, including failures. Kept separate so a
+  // batch of fast failures can't drive the parent loader to 100%.
+  const [settledCount, setSettledCount] = useState(0);
   const theme: ThemeMode = frameIndex >= NIGHT_START_FRAME ? "night" : "day";
 
   const frameUrls = FRAME_URLS;
@@ -357,10 +361,11 @@ export default function ScrollyPortfolio() {
       window.parent.postMessage({
         type: 'portfolio-loading-progress',
         loaded: loadedCount,
+        settled: settledCount,
         total: TOTAL_FRAMES,
       }, '*');
     } catch { /* ignore if no parent */ }
-  }, [loadedCount]);
+  }, [loadedCount, settledCount]);
 
   const getNearestLoadedFrame = (index: number) => {
     if (loadedFramesRef.current[index]) return index;
@@ -436,17 +441,24 @@ export default function ScrollyPortfolio() {
   useEffect(() => {
     let mounted = true;
     const collected: HTMLImageElement[] = [];
-    let count = 0;
+    let drawable = 0;
+    let settledTotal = 0;
 
     const settled: boolean[] = [];
 
     // Progress must advance for failed frames too, or the loader can never
-    // finish — but a failure must never mark the frame drawable.
+    // finish — but a failure must never mark the frame drawable, and must not
+    // count toward the percentage the parent displays.
     const markSettled = (index: number) => {
       if (settled[index]) return;
       settled[index] = true;
-      count += 1;
-      setLoadedCount(count);
+      settledTotal += 1;
+      setSettledCount(settledTotal);
+    };
+
+    const markDrawable = () => {
+      drawable += 1;
+      setLoadedCount(drawable);
     };
 
     frameUrls.forEach((url, index) => {
@@ -459,6 +471,7 @@ export default function ScrollyPortfolio() {
           collected[index] = image;
           imagesRef.current = collected;
           loadedFramesRef.current[index] = true;
+          markDrawable();
         }
         markSettled(index);
 
@@ -499,8 +512,17 @@ export default function ScrollyPortfolio() {
       // Never mark a failed frame drawable: drawImage() throws
       // InvalidStateError on a broken image, and that throw propagates out of
       // the frameIndex effect and blanks the whole section.
+      let retried = false;
       const onFrameFailed = () => {
         if (!mounted) return;
+        if (!retried) {
+          // One retry absorbs a transient network failure; without it a single
+          // dropped request drops that frame for the whole session. The query
+          // param avoids re-serving a cached failure.
+          retried = true;
+          image.src = `${url}${url.includes("?") ? "&" : "?"}retry=1`;
+          return;
+        }
         markSettled(index);
       };
 

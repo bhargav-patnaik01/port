@@ -249,9 +249,9 @@
                 function dismissLoader() {
                     if (dismissed) return;
                     dismissed = true;
-                    if (loaderPercent) loaderPercent.innerHTML = '100<span style="font-size:1.5rem;opacity:0.6">%</span>';
-                    if (loaderBar) loaderBar.style.width = '100%';
-                    if (loaderCount) loaderCount.textContent = '228 / 228 frames';
+                    // The readout is deliberately left at its real value. Forcing
+                    // it to 100% / 228 made a run where frames never arrived look
+                    // like a complete one.
                     clearTimeout(stallTimer);
                     clearTimeout(hardCapTimer);
                     if (loader) {
@@ -286,13 +286,19 @@
                     if (!d || d.type !== 'portfolio-loading-progress') return;
                     const loaded = Number(d.loaded) || 0;
                     const total = Number(d.total) || 228;
+                    // Frames that finished either way. Failures settle but are
+                    // deliberately excluded from `loaded`, so the percentage
+                    // reflects frames that can actually be drawn.
+                    const settled = Number.isFinite(Number(d.settled)) ? Number(d.settled) : loaded;
                     const pct = Math.round((loaded / total) * 100);
 
                     if (loaderPercent) loaderPercent.innerHTML = pct + '<span style="font-size:1.5rem;opacity:0.6">%</span>';
                     if (loaderBar) loaderBar.style.width = pct + '%';
                     if (loaderCount) loaderCount.textContent = loaded + ' / ' + total + ' frames';
 
-                    if (loaded >= total) {
+                    // Dismiss once nothing is outstanding, so a run with failed
+                    // frames still finishes instead of waiting out the timers.
+                    if (settled >= total) {
                         dismissLoader();
                     } else {
                         // Progress is flowing, so push the stall deadline back.
