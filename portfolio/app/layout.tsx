@@ -14,8 +14,39 @@ const manrope = Manrope({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://bhargavpatnaik.com"),
   title: "Bhargav Patnaik - Scrollytelling Portfolio",
   description: "Student at day, founder at night.",
+  icons: {
+    icon: [
+      { url: "/favicon.ico?v=2", sizes: "any" },
+      { url: "/icon.png?v=2", type: "image/png", sizes: "512x512" },
+      { url: "/favicon-32x32.png?v=2", type: "image/png", sizes: "32x32" },
+      { url: "/favicon-16x16.png?v=2", type: "image/png", sizes: "16x16" },
+    ],
+    shortcut: "/favicon.ico?v=2",
+    apple: [
+      { url: "/apple-touch-icon.png?v=2", sizes: "180x180", type: "image/png" },
+    ],
+  },
+  openGraph: {
+    title: "Bhargav Patnaik - Scrollytelling Portfolio",
+    description: "Student at day, founder at night.",
+    images: [
+      {
+        url: "/og-image.png?v=2",
+        width: 1200,
+        height: 630,
+        alt: "Bhargav Patnaik Portfolio",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Bhargav Patnaik - Scrollytelling Portfolio",
+    description: "Student at day, founder at night.",
+    images: ["/og-image.png?v=2"],
+  },
 };
 
 export default function RootLayout({
