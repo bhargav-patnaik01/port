@@ -437,16 +437,16 @@ export default function ScrollyPortfolio() {
     frameUrls.forEach((url, index) => {
       const image = new Image();
       image.decoding = "async";
-      image.crossOrigin = "anonymous";
-      image.src = url;
 
       const onFrameReady = () => {
         if (!mounted) return;
-        collected[index] = image;
-        imagesRef.current = collected;
-        loadedFramesRef.current[index] = true;
-        count += 1;
-        setLoadedCount(count);
+        if (!loadedFramesRef.current[index]) {
+          collected[index] = image;
+          imagesRef.current = collected;
+          loadedFramesRef.current[index] = true;
+          count += 1;
+          setLoadedCount(count);
+        }
 
         if (index === 0) {
           const sample = document.createElement("canvas");
@@ -462,7 +462,6 @@ export default function ScrollyPortfolio() {
               // Keep default background when pixel sampling is blocked.
             }
           }
-
           drawFrame(0);
         }
 
@@ -484,24 +483,13 @@ export default function ScrollyPortfolio() {
       };
 
       image.onload = onFrameReady;
-      image.onerror = () => {
-        // On error, retry once after a short delay
-        if (!mounted) return;
-        const retry = new Image();
-        retry.decoding = "async";
-        retry.crossOrigin = "anonymous";
-        retry.src = url;
-        retry.onload = () => {
-          collected[index] = retry;
-          onFrameReady();
-        };
-        retry.onerror = () => {
-          // Count it anyway so the loader doesn't hang forever
-          if (!mounted) return;
-          count += 1;
-          setLoadedCount(count);
-        };
-      };
+      image.onerror = onFrameReady;
+
+      if (image.complete) {
+        onFrameReady();
+      } else {
+        image.src = url;
+      }
     });
 
     return () => {

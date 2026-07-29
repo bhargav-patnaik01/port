@@ -235,6 +235,32 @@
                     return;
                 }
 
+                // Prevent background scrolling while loading screen is active
+                document.body.style.overflow = 'hidden';
+
+                function dismissLoader() {
+                    if (dismissed) return;
+                    dismissed = true;
+                    if (loaderPercent) loaderPercent.innerHTML = '100<span style="font-size:1.5rem;opacity:0.6">%</span>';
+                    if (loaderBar) loaderBar.style.width = '100%';
+                    if (loaderCount) loaderCount.textContent = '228 / 228 frames';
+                    if (loader) {
+                        loader.style.opacity = '0';
+                        loader.style.pointerEvents = 'none';
+                        setTimeout(() => {
+                            loader.remove();
+                            document.body.style.overflow = '';
+                        }, 600);
+                    } else {
+                        document.body.style.overflow = '';
+                    }
+                }
+
+                // Safety fallback: auto-dismiss loader after 2.5 seconds if frames load slowly or postMessage is delayed
+                const fallbackTimer = setTimeout(() => {
+                    dismissLoader();
+                }, 2500);
+
                 window.addEventListener('message', (event) => {
                     const d = event.data;
                     if (!d || d.type !== 'portfolio-loading-progress') return;
@@ -247,12 +273,8 @@
                     if (loaderCount) loaderCount.textContent = loaded + ' / ' + total + ' frames';
 
                     if (loaded >= total && !dismissed) {
-                        dismissed = true;
-                        if (loader) {
-                            loader.style.opacity = '0';
-                            loader.style.pointerEvents = 'none';
-                            setTimeout(() => loader.remove(), 700);
-                        }
+                        clearTimeout(fallbackTimer);
+                        dismissLoader();
                     }
                 });
             })();
