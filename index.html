@@ -253,7 +253,6 @@
                     // it to 100% / 228 made a run where frames never arrived look
                     // like a complete one.
                     clearTimeout(stallTimer);
-                    clearTimeout(hardCapTimer);
                     if (loader) {
                         loader.style.opacity = '0';
                         loader.style.pointerEvents = 'none';
@@ -266,11 +265,13 @@
                     }
                 }
 
-                // Safety fallback. A flat 2.5s timer dismissed the loader while the
-                // counter still read 0%, so instead we wait for progress to actually
-                // stall, with a hard ceiling so a dead iframe can never trap anyone.
-                const STALL_MS = 8000;
-                const HARD_CAP_MS = 25000;
+                // Safety fallback: dismiss only once progress actually stops.
+                // Deliberately no absolute ceiling — a fixed cap cut the loader off
+                // mid-download on slower connections, which left the canvas holding
+                // frame 0 while the visitor scrolled. Every message here represents a
+                // frame that finished, and there are only ever TOTAL_FRAMES of them,
+                // so a quiet network still ends this within STALL_MS.
+                const STALL_MS = 12000;
                 let stallTimer = null;
 
                 function armStallTimer() {
@@ -278,7 +279,6 @@
                     stallTimer = setTimeout(dismissLoader, STALL_MS);
                 }
 
-                const hardCapTimer = setTimeout(dismissLoader, HARD_CAP_MS);
                 armStallTimer();
 
                 window.addEventListener('message', (event) => {
